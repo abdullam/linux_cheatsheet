@@ -1,0 +1,47 @@
+#START prompt calculation
+MY_SDE_NO_PROMPT_OR_TITLE=no #don't let script inside bash_rc overwrite PROMPT_COMMAND
+if [ -f ~/.git-prompt.sh ]; then
+    source ~/.git-prompt.sh
+fi
+calculate_prompt()
+{
+    if [ `hostname` = "onx-mabdulla-01.ciena.com" ]; then
+        host=""
+    else
+        host="\h"
+    fi
+
+    repo_local_name=`basename $(git rev-parse --show-toplevel 2>/dev/null) 2>/dev/null`
+    my_cwd=`pwd`
+    my_cwd="${my_cwd%$repo_local_name*}\[$(tput bold)$(tput setaf 3)\]$repo_local_name\[$(tput sgr0)\]${my_cwd##*$repo_local_name}"
+
+    git_branch=$(git branch 2>/dev/null | grep '^*' | colrm 1 2)
+    if [ -z "${git_branch/ /}" ]; then
+        prompt="@$host \\w \$ "
+    else
+        RED_BG="\[\e[41m\]\[\e[1;97m\]"
+        GREEN_BG="\[\e[1;97;102m\]"
+        CLEAR_COLOR="\[\e[0m\]"
+        CLEAR_EOL="\[\033[K\]"
+        prompt="\n@ $host $my_cwd : \[$(tput bold)$(tput setab 1)$(tput setaf 7)\]${git_branch}\[$(tput sgr0)$(tput el)\] \n\$ "
+        #prompt="@$host \\w : $(tput bold)$(tput setab 1)$(tput setaf 7)${git_branch}$(tput sgr0)${CLEAR_EOL} \$ "
+    fi
+
+    #set terminal title to the repo directory names
+    #echo -en "\033]0;$repo_local_name\a"
+
+    PS1="$prompt"
+}
+
+calculate_prompt1()
+{
+    host="my-linux"
+    git_branch="a very very very very very very very very very very very very very very long prompt"
+    prompt="@$host \\w : \[$(tput bold)$(tput setab 1)$(tput setaf 7)\]${git_branch}\[$(tput sgr0)$(tput el)\]\$ "
+    PS1="$prompt"
+}
+
+PROMPT_COMMAND="calculate_prompt;"
+# Save and reload the history after each command finishes
+#PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
+#END prompt calculation
